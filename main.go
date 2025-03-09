@@ -11,7 +11,6 @@ import (
 func main() {
 	//controller.Login()
 
-	dsn := "root:@tcp(127.0.0.1:3306)/info_find?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info), // Bật log SQL
 	})
