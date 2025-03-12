@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"LeakInfo/middleware"
 	"LeakInfo/service"
 	"fmt"
 	"github.com/gin-contrib/cors"
@@ -8,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -36,7 +38,7 @@ func Controller(db *gorm.DB) {
 	router.Run()
 }
 
-func Login() {
+func LoginWithGoogle() {
 
 	http.HandleFunc("/", service.HomeHandler)
 	http.HandleFunc("/auth/login", service.LoginHandler)
@@ -45,4 +47,28 @@ func Login() {
 	port := "8080"
 	fmt.Println("Server started at http://localhost:" + port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func Login(db *gorm.DB) {
+	r := gin.Default()
+
+	// Đăng ký và đăng nhập
+	r.POST("/register", service.Register(db))
+	r.POST("/login", service.Login(db))
+
+	// Route yêu cầu quyền admin
+	admin := r.Group("/admin")
+	admin.Use(middleware.AuthMiddleware("admin"))
+	{
+		admin.GET("/dashboard", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "Chào mừng admin!"})
+		})
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	r.Run(":" + port)
 }
