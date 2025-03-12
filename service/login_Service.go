@@ -20,6 +20,19 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		if user.Username == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Username không được để trống"})
+			return
+		}
+
+		//if user.Password == "" {
+		//	c.JSON(http.StatusBadRequest, gin.H{"error": "Password không được để trống"})
+		//	return
+		//}
+
+		user.Status = 1
+		user.Role = "user"
+
 		// Mã hóa mật khẩu
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -48,7 +61,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var user bean.User
-		if err := db.Where("username = ?", input.Username).First(&user).Error; err != nil {
+		if err := db.Where("username = ? and status = 1 ", input.Username).First(&user).Error; err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Tài khoản không tồn tại"})
 			return
 		}

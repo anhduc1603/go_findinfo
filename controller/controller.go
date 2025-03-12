@@ -52,6 +52,15 @@ func LoginWithGoogle() {
 func Login(db *gorm.DB) {
 	r := gin.Default()
 
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"}, // Cho phép React frontend gọi API
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour, // Cache preflight request trong 12h
+	}))
+
 	// Đăng ký và đăng nhập
 	r.POST("/register", service.Register(db))
 	r.POST("/login", service.Login(db))
