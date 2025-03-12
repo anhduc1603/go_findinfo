@@ -28,7 +28,7 @@ func CreateItem(db *gorm.DB) gin.HandlerFunc {
 		//	return
 		//}
 
-		// do not allow "finished" status when creating a new task
+		// do not allow "finished" status when creating HistoryRequest new task
 		dataItem.Status = 1 // set to default
 
 		if err := db.Create(&dataItem).Error; err != nil {

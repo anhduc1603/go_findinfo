@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../../React/Dashbaord-Tutorial-using-React-and-Ant-Design/.idea/Dashbaord-Tutorial-using-React-and-Ant-Design.iml" filepath="$PROJECT_DIR$/../../React/Dashbaord-Tutorial-using-React-and-Ant-Design/.idea/Dashbaord-Tutorial-using-React-and-Ant-Design.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/LeakInfo.iml" filepath="$PROJECT_DIR$/.idea/LeakInfo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../reactJs_Basic/.idea/reactJs_Basic.iml" filepath="$PROJECT_DIR$/../reactJs_Basic/.idea/reactJs_Basic.iml" />
     </modules>
   </component>
 </project>
