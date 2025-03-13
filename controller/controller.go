@@ -35,7 +35,27 @@ func Controller(db *gorm.DB) {
 		v1.DELETE("/items/:id", service.DeleteItemById(db)) // delete an item by ID
 	}
 
-	router.Run()
+	// Đăng ký và đăng nhập
+	router.POST("/register", service.Register(db))
+	router.POST("/login", service.Login(db))
+
+	// Route yêu cầu quyền admin
+	admin := router.Group("/admin")
+	admin.Use(middleware.AuthMiddleware("admin"))
+	{
+		admin.GET("/dashboard", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "Chào mừng admin!"})
+		})
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	router.Run(":" + port)
+
+	//router.Run()
 }
 
 func LoginWithGoogle() {
@@ -49,35 +69,36 @@ func LoginWithGoogle() {
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-func Login(db *gorm.DB) {
-	r := gin.Default()
-
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // Cho phép React frontend gọi API
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour, // Cache preflight request trong 12h
-	}))
-
-	// Đăng ký và đăng nhập
-	r.POST("/register", service.Register(db))
-	r.POST("/login", service.Login(db))
-
-	// Route yêu cầu quyền admin
-	admin := r.Group("/admin")
-	admin.Use(middleware.AuthMiddleware("admin"))
-	{
-		admin.GET("/dashboard", func(c *gin.Context) {
-			c.JSON(200, gin.H{"message": "Chào mừng admin!"})
-		})
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	r.Run(":" + port)
-}
+//
+//func Login(db *gorm.DB) {
+//	r := gin.Default()
+//
+//	r.Use(cors.New(cors.Config{
+//		AllowOrigins:     []string{"http://localhost:3000"}, // Cho phép React frontend gọi API
+//		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+//		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+//		ExposeHeaders:    []string{"Content-Length"},
+//		AllowCredentials: true,
+//		MaxAge:           12 * time.Hour, // Cache preflight request trong 12h
+//	}))
+//
+//	// Đăng ký và đăng nhập
+//	r.POST("/register", service.Register(db))
+//	r.POST("/login", service.Login(db))
+//
+//	// Route yêu cầu quyền admin
+//	admin := r.Group("/admin")
+//	admin.Use(middleware.AuthMiddleware("admin"))
+//	{
+//		admin.GET("/dashboard", func(c *gin.Context) {
+//			c.JSON(200, gin.H{"message": "Chào mừng admin!"})
+//		})
+//	}
+//
+//	port := os.Getenv("PORT")
+//	if port == "" {
+//		port = "8080"
+//	}
+//
+//	r.Run(":" + port)
+//}

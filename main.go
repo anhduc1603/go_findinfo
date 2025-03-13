@@ -21,7 +21,6 @@ func main() {
 
 	log.Println("Connected:", db)
 
-	//controller.Controller(db)
-	controller.Login(db)
+	controller.Controller(db)
 
 }
