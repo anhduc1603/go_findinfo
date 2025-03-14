@@ -12,6 +12,7 @@ type User struct {
 	CreatedAt *time.Time `json:"created_at" gorm:"column:created_at;"`
 	UpdatedAt *time.Time `json:"updated_at" gorm:"column:updated_at;"`
 	Status    int        `json:"status" gorm:"column:status;"`
+	Email     string     `json:"email" gorm:"column:email;"`
 }
 
 func (User) TableName() string {
