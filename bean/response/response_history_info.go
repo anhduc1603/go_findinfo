@@ -10,7 +10,7 @@ type ResponseHistoryInfo struct {
 	Info      string     `json:"info" gorm:"column:info;"`
 	Content   string     `json:"content" gorm:"column:content;"`
 	Status    int        `json:"status" gorm:"column:status;"`
-	UserId    int        `json:"user_id" gorm:"column:user_id;"`
+	UserId    int        `json:"userid" gorm:"column:userid;"`
 	CreatedAt *time.Time `json:"created_at" gorm:"column:created_at;"`
 	UpdatedAt *time.Time `json:"updated_at" gorm:"column:updated_at;"`
 }
