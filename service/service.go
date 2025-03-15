@@ -1,7 +1,9 @@
 package service
 
 import (
+	"LeakInfo/bean/request"
 	"LeakInfo/bean/response"
+	"LeakInfo/constant"
 	"bytes"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -142,8 +144,10 @@ func GetListOfItems(db *gorm.DB) gin.HandlerFunc {
 		offset := (paging.Page - 1) * paging.Limit
 
 		var result []response.ResponseHistoryInfo
+		var statusList = []int{constant.StatusSuccess, constant.StatusProcess}
 
 		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
+			Where("status in (?)", statusList).
 			Count(&paging.Total).
 			Offset(offset).
 			Order("id desc").
@@ -153,44 +157,6 @@ func GetListOfItems(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"data": result})
-	}
-}
-
-func DeleteItemById(db *gorm.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Đọc toàn bộ request body
-		body, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot read request body"})
-			return
-		}
-		log.Println("📥 Request Body:", string(body))
-
-		// Reset lại body để Gin có thể đọc tiếp (do ReadAll() làm mất dữ liệu)
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-
-		var dataItem response.ResponseHistoryInfo
-
-		if err := c.ShouldBind(&dataItem); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		//db.Updates(&dataItem)
-		if err := db.Model(&dataItem).
-			Where("id = ? AND userid = ?", id, dataItem.UserId).
-			Update("status", dataItem.Status).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{"data": true})
 	}
 }
 
@@ -214,14 +180,11 @@ func EditItemById(db *gorm.DB) gin.HandlerFunc {
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 		var dataItem response.ResponseHistoryInfo
-
 		if err := c.ShouldBind(&dataItem); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
-		//db.Updates(&dataItem)
-
+		dataItem.Status = constant.StatusSuccess
 		if err := db.Where("id = ?", id).Updates(&dataItem).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
@@ -231,25 +194,93 @@ func EditItemById(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-//func DeleteItemById(db *gorm.DB) gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//		id, err := strconv.Atoi(c.Param("id"))
-//
-//		if err != nil {
-//			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//			return
-//		}
-//
-//		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
-//			Where("id = ?", id).
-//			Delete(nil).Error; err != nil {
-//			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//			return
-//		}
-//
-//		c.JSON(http.StatusOK, gin.H{"data": true})
-//	}
-//}
+func DeleteItemByListId(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Đọc toàn bộ request body
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot read request body"})
+			return
+		}
+		log.Println("📥 Request Body:", string(body))
+
+		// Reset lại body để Gin có thể đọc tiếp (do ReadAll() làm mất dữ liệu)
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
+		var listId request.ReqUpdateAllId
+
+		if err := c.ShouldBind(&listId); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		log.Println("📥List IDS", listId)
+
+		if len(listId.IDs) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "list_ids cannot be empty"})
+			return
+		}
+
+		result := db.Model(&response.ResponseHistoryInfo{}).
+			Where("id IN (?)", listId.IDs).
+			Update("status", constant.StatusClose)
+
+		// Kiểm tra số dòng bị ảnh hưởng
+		if result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+			return
+		}
+		if result.RowsAffected == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No records updated"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"response": true})
+	}
+}
+
+func DeleteItems(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Đọc toàn bộ request body
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot read request body"})
+			return
+		}
+		log.Println("📥 Request Body:", string(body))
+
+		// Reset lại body để Gin có thể đọc tiếp (do ReadAll() làm mất dữ liệu)
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
+		var listId request.ReqUpdateAllId
+
+		if err := c.ShouldBind(&listId); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		log.Println("📥List IDS", listId)
+
+		if len(listId.IDs) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "list_ids cannot be empty"})
+			return
+		}
+
+		result := db.Model(&response.ResponseHistoryInfo{}).
+			Where("id IN (?)", listId.IDs).
+			Update("status", constant.StatusClose)
+
+		// Kiểm tra số dòng bị ảnh hưởng
+		if result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+			return
+		}
+		if result.RowsAffected == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No records updated"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"response": true})
+	}
+}
 
 // Gen userId
 func generateShortID() int {
