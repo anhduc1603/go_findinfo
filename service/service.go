@@ -157,6 +157,52 @@ func GetListOfItems(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+func GetListOfItemsByAdmin(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		type DataPaging struct {
+			Page  int   `json:"page" form:"page"`
+			Limit int   `json:"limit" form:"limit"`
+			Total int64 `json:"total" form:"-"`
+		}
+
+		var paging DataPaging
+
+		if err := c.ShouldBind(&paging); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if paging.Page <= 0 {
+			paging.Page = 1
+		}
+
+		if paging.Limit <= 0 {
+			paging.Limit = 10
+		}
+
+		offset := (paging.Page - 1) * paging.Limit
+
+		var result []response.ResponseHistoryInfo
+		var statusList = []int{constant.StatusSuccess, constant.StatusProcess, constant.StatusUserClickDisplay, constant.StatusUserClickDownload}
+
+		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
+			Where("status IN (?)", statusList).
+			Count(&paging.Total).
+			Offset(offset).
+			Limit(paging.Limit).
+			Order("id DESC").
+			Find(&result).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data":   result,
+			"paging": paging,
+		})
+	}
+}
+
 func EditItemById(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.Atoi(c.Param("id"))
@@ -179,9 +225,9 @@ func EditItemById(db *gorm.DB) gin.HandlerFunc {
 		var dataItem response.ResponseHistoryInfo
 		if err := c.ShouldBind(&dataItem); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			log.Println("error", string(err.Error()))
 			return
 		}
-		dataItem.Status = constant.StatusSuccess
 		if err := db.Where("id = ?", id).Updates(&dataItem).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return

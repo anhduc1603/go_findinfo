@@ -48,6 +48,9 @@ func Controller(db *gorm.DB) {
 		admin.GET("/dashboard", func(c *gin.Context) {
 			c.JSON(200, gin.H{"message": "Chào mừng admin!"})
 		})
+
+		admin.GET("/items", service.GetListOfItemsByAdmin(db)) //Get all items with all status
+
 	}
 
 	port := os.Getenv("PORT")
