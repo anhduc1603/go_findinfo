@@ -32,7 +32,7 @@ func Controller(db *gorm.DB) {
 		v1.GET("/items", service.GetListOfItems(db))           // list items by admin
 		v1.GET("/list/:userid", service.ReadItemByUserId(db))  // list by userId
 		v1.GET("/items/:id", service.ReadItemById(db))         // get an item by ID
-		v1.POST("/items/:id", service.EditItemById(db))        // edit an item by ID
+		v1.POST("/items/update/:id", service.EditItemById(db)) // edit an item by ID
 		v1.POST("/update/all", service.DeleteItemByListId(db)) // delete an item by list ID
 		v1.POST("/delete", service.DeleteItems(db))            // delete an item by ID
 	}
