@@ -91,18 +91,23 @@ func ReadItemByUserId(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing user_id"})
 			return
 		}
+		var statusList = []int{constant.StatusSuccess, constant.StatusProcess}
 
 		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
-			Where("userid = ?", userid).
+			Where("userid = ? and status in (?) ", userid, statusList).
 			Count(&paging.Total).
 			Offset(offset).
-			Order("id desc").
+			Limit(paging.Limit).
+			Order("id DESC").
 			Find(&result).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": result})
+		c.JSON(http.StatusOK, gin.H{
+			"data":   result,
+			"paging": paging,
+		})
 	}
 }
 
@@ -135,16 +140,20 @@ func GetListOfItems(db *gorm.DB) gin.HandlerFunc {
 		var statusList = []int{constant.StatusSuccess, constant.StatusProcess}
 
 		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
-			Where("status in (?)", statusList).
+			Where("status IN (?)", statusList).
 			Count(&paging.Total).
 			Offset(offset).
-			Order("id desc").
+			Limit(paging.Limit).
+			Order("id DESC").
 			Find(&result).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": result})
+		c.JSON(http.StatusOK, gin.H{
+			"data":   result,
+			"paging": paging,
+		})
 	}
 }
 
