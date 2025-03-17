@@ -25,11 +25,6 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		//if user.Password == "" {
-		//	c.JSON(http.StatusBadRequest, gin.H{"error": "Password không được để trống"})
-		//	return
-		//}
-
 		user.Status = 1
 		user.Role = "user"
 
@@ -74,6 +69,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 
 		// Tạo token JWT
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"id":       user.ID,
 			"username": user.Username,
 			"role":     user.Role,
 			"exp":      time.Now().Add(time.Hour * 24).Unix(),

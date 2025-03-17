@@ -24,7 +24,6 @@ func CreateItem(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		dataItem.Status = 1 // set to default
-		dataItem.UserId = generateShortID()
 		if err := db.Create(&dataItem).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -64,7 +63,12 @@ func ReadItemByUserId(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var paging DataPaging
+		userid, err := strconv.Atoi(c.Param("userid"))
 
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		if err := c.ShouldBind(&paging); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -82,30 +86,14 @@ func ReadItemByUserId(db *gorm.DB) gin.HandlerFunc {
 
 		var result []response.ResponseHistoryInfo
 
-		body, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot read request body"})
-			return
-		}
-		log.Println("📥 Request Body:", string(body))
-
-		// Reset lại body để Gin có thể đọc tiếp (do ReadAll() làm mất dữ liệu)
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-
-		// 📌 Đọc trực tiếp JSON từ request body
-		var dataItem response.ResponseHistoryInfo
-		if err := c.ShouldBindJSON(&dataItem); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
-			return
-		}
 		// 📌 Kiểm tra `userID` có tồn tại không
-		if dataItem.UserId == 0 {
+		if userid == 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing user_id"})
 			return
 		}
 
 		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
-			Where("userid = ?", dataItem.UserId).
+			Where("userid = ?", userid).
 			Count(&paging.Total).
 			Offset(offset).
 			Order("id desc").
