@@ -5,14 +5,13 @@ import (
 	"LeakInfo/bean/response"
 	"LeakInfo/constant"
 	"bytes"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func CreateItem(db *gorm.DB) gin.HandlerFunc {
@@ -141,6 +140,54 @@ func GetListOfItems(db *gorm.DB) gin.HandlerFunc {
 
 		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
 			Where("status IN (?)", statusList).
+			Count(&paging.Total).
+			Offset(offset).
+			Limit(paging.Limit).
+			Order("id DESC").
+			Find(&result).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data":   result,
+			"paging": paging,
+		})
+	}
+}
+
+func GetListOfItemsWithInfo(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		info := c.Param("info")
+
+		type DataPaging struct {
+			Page  int   `json:"page" form:"page"`
+			Limit int   `json:"limit" form:"limit"`
+			Total int64 `json:"total" form:"-"`
+		}
+
+		var paging DataPaging
+
+		if err := c.ShouldBind(&paging); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if paging.Page <= 0 {
+			paging.Page = 1
+		}
+
+		if paging.Limit <= 0 {
+			paging.Limit = 10
+		}
+
+		offset := (paging.Page - 1) * paging.Limit
+
+		var result []response.ResponseHistoryInfo
+		var statusList = []int{constant.StatusSuccess, constant.StatusProcess}
+
+		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
+			Where("info LIKE ? AND status IN (?)", "%"+info+"%", statusList).
 			Count(&paging.Total).
 			Offset(offset).
 			Limit(paging.Limit).
@@ -325,12 +372,48 @@ func DeleteItems(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Gen userId
-func generateShortID() int {
-	now := time.Now()
-	milli := now.Nanosecond() / 1e6    // Lấy mili giây (0-999)
-	randomPart := rand.Intn(900) + 100 // Sinh số ngẫu nhiên từ 100-999
+func GetDisplayItems(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
-	// Ghép mili giây và số ngẫu nhiên (lấy 3 số cuối của mili giây)
-	return (milli*1000 + randomPart) % 1000000 // Giới hạn 6 chữ số
+		var result response.DisplayItemResponse
+
+		if err := db.Table("response_history_info r ").
+			Select("r.info, r.content,r.userid, u.username, u.email ").
+			Joins("join users u on r.userid = u.id").
+			Where("r.id = ?", id).
+			Scan(&result).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, gin.H{"data": result})
+	}
+
+}
+
+func UploadFileContent(c *gin.Context) {
+	// Lấy file từ form
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Lưu file vào thư mục local (ví dụ ./uploads/)
+	filePath := fmt.Sprintf("./uploads/%s", file.Filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Upload file thành công!",
+		"file":    file.Filename,
+		"path":    filePath,
+	})
 }
