@@ -3,12 +3,9 @@ package controller
 import (
 	"LeakInfo/middleware"
 	"LeakInfo/service"
-	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"log"
-	"net/http"
 	"os"
 	"time"
 )
@@ -71,48 +68,3 @@ func Controller(db *gorm.DB) {
 
 	//router.Run()
 }
-
-func LoginWithGoogle() {
-
-	//http.HandleFunc("/", service.HomeHandler)
-	//http.HandleFunc("/auth/login", service.LoginHandler)
-	//http.HandleFunc("/auth/callback", service.CallbackHandler)
-
-	port := "8080"
-	fmt.Println("Server started at http://localhost:" + port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
-}
-
-//
-//func Login(db *gorm.DB) {
-//	r := gin.Default()
-//
-//	r.Use(cors.New(cors.Config{
-//		AllowOrigins:     []string{"http://localhost:3000"}, // Cho phép React frontend gọi API
-//		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-//		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-//		ExposeHeaders:    []string{"Content-Length"},
-//		AllowCredentials: true,
-//		MaxAge:           12 * time.Hour, // Cache preflight request trong 12h
-//	}))
-//
-//	// Đăng ký và đăng nhập
-//	r.POST("/register", service.Register(db))
-//	r.POST("/login", service.Login(db))
-//
-//	// Route yêu cầu quyền admin
-//	admin := r.Group("/admin")
-//	admin.Use(middleware.AuthMiddleware("admin"))
-//	{
-//		admin.GET("/dashboard", func(c *gin.Context) {
-//			c.JSON(200, gin.H{"message": "Chào mừng admin!"})
-//		})
-//	}
-//
-//	port := os.Getenv("PORT")
-//	if port == "" {
-//		port = "8080"
-//	}
-//
-//	r.Run(":" + port)
-//}
