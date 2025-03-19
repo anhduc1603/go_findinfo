@@ -2,13 +2,11 @@ package service
 
 import (
 	"LeakInfo/bean"
+	"LeakInfo/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"net/http"
-	"os"
-	"time"
 )
 
 // Đăng ký người dùng
@@ -67,15 +65,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Tạo token JWT
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"id":       user.ID,
-			"username": user.Username,
-			"role":     user.Role,
-			"exp":      time.Now().Add(time.Hour * 24).Unix(),
-		})
-
-		tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+		tokenString, err := utils.GenerateJWTToken(user.ID, user.Username, user.Role)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi tạo token"})
 			return

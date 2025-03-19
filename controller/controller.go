@@ -44,6 +44,12 @@ func Controller(db *gorm.DB) {
 	router.POST("/register", service.Register(db))
 	router.POST("/login", service.Login(db))
 
+	//Login with google
+	router.GET("/", service.HomeHandler)
+	router.GET("/auth/login", service.LoginHandler)
+	router.GET("/auth/callback", service.CallbackHandler(db))
+	router.GET("/auth/logout", service.LogoutHandler)
+
 	// Route yêu cầu quyền admin
 	admin := router.Group("/admin")
 	admin.Use(middleware.AuthMiddleware("admin"))
@@ -68,9 +74,9 @@ func Controller(db *gorm.DB) {
 
 func LoginWithGoogle() {
 
-	http.HandleFunc("/", service.HomeHandler)
-	http.HandleFunc("/auth/login", service.LoginHandler)
-	http.HandleFunc("/auth/callback", service.CallbackHandler)
+	//http.HandleFunc("/", service.HomeHandler)
+	//http.HandleFunc("/auth/login", service.LoginHandler)
+	//http.HandleFunc("/auth/callback", service.CallbackHandler)
 
 	port := "8080"
 	fmt.Println("Server started at http://localhost:" + port)
