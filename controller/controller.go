@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"LeakInfo/config"
 	"LeakInfo/middleware"
 	"LeakInfo/service"
 	"github.com/gin-contrib/cors"
@@ -10,12 +11,12 @@ import (
 	"time"
 )
 
-func Controller(db *gorm.DB) {
+func Controller(db *gorm.DB, cfg *config.Config) {
 	router := gin.Default()
 
 	// Bật CORS cho tất cả các request
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // Cho phép React frontend gọi API
+		AllowOrigins:     []string{cfg.UrlFe}, // Cho phép React frontend gọi API
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -37,14 +38,16 @@ func Controller(db *gorm.DB) {
 
 	}
 
+	router.POST("/userlogs", service.CreateUserLogs(db))
+
 	// Đăng ký và đăng nhập
 	router.POST("/register", service.Register(db))
 	router.POST("/login", service.Login(db))
 
 	//Login with google
 	router.GET("/", service.HomeHandler)
-	router.GET("/auth/login", service.LoginHandler)
-	router.GET("/auth/callback", service.CallbackHandler(db))
+	router.GET("/auth/login", service.LoginHandler(cfg))
+	router.GET("/auth/callback", service.CallbackHandler(db, cfg))
 	router.GET("/auth/logout", service.LogoutHandler)
 
 	// Route yêu cầu quyền admin
