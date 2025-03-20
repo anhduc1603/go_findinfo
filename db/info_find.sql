@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 19, 2025 at 10:35 AM
+-- Generation Time: Mar 20, 2025 at 10:02 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.1.10
 
@@ -20,6 +20,30 @@ SET time_zone = "+00:00";
 --
 -- Database: `info_find`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `google_tokens`
+--
+
+CREATE TABLE `google_tokens` (
+  `id` int NOT NULL,
+  `userid` bigint UNSIGNED NOT NULL,
+  `google_access_token` text NOT NULL,
+  `google_refresh_token` text,
+  `token_expiry` datetime DEFAULT NULL,
+  `user_cookie` varchar(2000) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `google_tokens`
+--
+
+INSERT INTO `google_tokens` (`id`, `userid`, `google_access_token`, `google_refresh_token`, `token_expiry`, `user_cookie`, `created_at`, `updated_at`) VALUES
+(1, 19, 'ya29.a0AeXRPp4eCRwIXXB9MDX6exNWJdrdSxNoGh0nEwa1l_CYxKhONtP5xs0x_uOKqxH4eUttX4Gs3o6LPi6UTye20RljzCT1fXm2-M4hi4kJ70HYOOo2zlDD8sYKT1hUCOPZd0qM-qAiptQ5G6jzi8p_s7M37rHWqmad5uLyIbLQDAaCgYKAaUSARISFQHGX2MiAa0UyNTMEQxhNC9ZR3aYCg0177', '', '2025-03-20 15:33:58', '', '2025-03-20 07:00:34', '2025-03-20 07:34:01');
 
 -- --------------------------------------------------------
 
@@ -94,6 +118,34 @@ INSERT INTO `users` (`id`, `username`, `password`, `role`, `created_at`, `update
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `user_logs`
+--
+
+CREATE TABLE `user_logs` (
+  `id` int NOT NULL,
+  `userid` int NOT NULL,
+  `ip_public` varchar(50) DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `status_download_file` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `action` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `user_logs`
+--
+
+INSERT INTO `user_logs` (`id`, `userid`, `ip_public`, `user_agent`, `status_download_file`, `created_at`, `action`) VALUES
+(1, 19, '192.168.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 1, '2025-03-20 08:27:32', NULL),
+(2, 19, '192.168.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 0, '2025-03-20 08:28:00', NULL),
+(3, 4, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 0, '2025-03-20 09:20:15', NULL),
+(4, 4, '210.245.49.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 0, '2025-03-20 09:21:34', NULL),
+(5, 4, '210.245.49.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 0, '2025-03-20 09:30:31', NULL),
+(6, 4, '210.245.49.42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 0, '2025-03-20 09:31:23', 'login');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `user_providers`
 --
 
@@ -121,6 +173,13 @@ INSERT INTO `user_providers` (`id`, `userid`, `provider`, `provider_id`, `email`
 --
 
 --
+-- Indexes for table `google_tokens`
+--
+ALTER TABLE `google_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `userid` (`userid`);
+
+--
 -- Indexes for table `response_history_info`
 --
 ALTER TABLE `response_history_info`
@@ -135,6 +194,12 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `username` (`username`);
 
 --
+-- Indexes for table `user_logs`
+--
+ALTER TABLE `user_logs`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `user_providers`
 --
 ALTER TABLE `user_providers`
@@ -145,6 +210,12 @@ ALTER TABLE `user_providers`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `google_tokens`
+--
+ALTER TABLE `google_tokens`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `response_history_info`
@@ -159,6 +230,12 @@ ALTER TABLE `users`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `user_logs`
+--
+ALTER TABLE `user_logs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
 -- AUTO_INCREMENT for table `user_providers`
 --
 ALTER TABLE `user_providers`
@@ -167,6 +244,12 @@ ALTER TABLE `user_providers`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `google_tokens`
+--
+ALTER TABLE `google_tokens`
+  ADD CONSTRAINT `google_tokens_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `user_providers`
