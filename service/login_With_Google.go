@@ -2,27 +2,19 @@ package service
 
 import (
 	"LeakInfo/bean"
-	"LeakInfo/constant"
+	"LeakInfo/config"
 	"LeakInfo/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"gorm.io/gorm"
 	"html/template"
+	"log"
 	"net/http"
+	"time"
 )
-
-// Cấu hình OAuth2 cho Google
-var googleOAuthConfig = &oauth2.Config{
-	RedirectURL:  "http://localhost:8080/auth/callback",
-	ClientID:     constant.ClientID,
-	ClientSecret: constant.ClientSecret,
-	Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"},
-	Endpoint:     google.Endpoint,
-}
 
 const oauthStateString = "random-state"
 
@@ -37,11 +29,16 @@ func HomeHandler(c *gin.Context) {
 }
 
 // Xử lý đăng nhập
-func LoginHandler(c *gin.Context) {
-	url := googleOAuthConfig.AuthCodeURL(
-		oauthStateString,
-		oauth2.SetAuthURLParam("prompt", "select_account"))
-	c.Redirect(http.StatusTemporaryRedirect, url)
+func LoginHandler(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Cấu hình OAuth2 cho Google
+		var googleOAuthConfig = config.NewGoogleOAuthConfig(cfg)
+
+		url := googleOAuthConfig.AuthCodeURL(
+			oauthStateString,
+			oauth2.SetAuthURLParam("prompt", "select_account"))
+		c.Redirect(http.StatusTemporaryRedirect, url)
+	}
 }
 
 func LogoutHandler(c *gin.Context) {
@@ -55,7 +52,7 @@ func LogoutHandler(c *gin.Context) {
 }
 
 // Xử lý callback từ Google
-func CallbackHandler(db *gorm.DB) gin.HandlerFunc {
+func CallbackHandler(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Query("state") != oauthStateString {
 			c.String(http.StatusBadRequest, "Invalid OAuth state")
@@ -63,6 +60,7 @@ func CallbackHandler(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		code := c.Query("code")
+		var googleOAuthConfig = config.NewGoogleOAuthConfig(cfg)
 		token, err := googleOAuthConfig.Exchange(context.Background(), code)
 		if err != nil {
 			c.String(http.StatusInternalServerError, "Token exchange failed")
@@ -70,7 +68,7 @@ func CallbackHandler(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		client := googleOAuthConfig.Client(context.Background(), token)
-		resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+		resp, err := client.Get(cfg.GoogleApiOauth)
 		if err != nil {
 			c.String(http.StatusInternalServerError, "Failed to get user info")
 			return
@@ -107,9 +105,26 @@ func CallbackHandler(db *gorm.DB) gin.HandlerFunc {
 				Avatar:     googleUser.Picture,
 			}
 			db.Create(&provider)
+
+			// ✅ Lưu token: AccessToken, RefreshToken, Expiry
+			accessToken := token.AccessToken
+			refreshToken := token.RefreshToken
+			expiry := token.Expiry
+			err = SaveOrUpdateGoogleToken(user.ID, accessToken, "", refreshToken, expiry, db)
+			if err != nil {
+				log.Println("error:", err.Error())
+			}
 		} else {
 			// Get existing user
 			db.First(&user, provider.UserId)
+
+			accessToken := token.AccessToken
+			refreshToken := token.RefreshToken
+			expiry := token.Expiry
+			err = SaveOrUpdateGoogleToken(user.ID, accessToken, "", refreshToken, expiry, db)
+			if err != nil {
+				log.Println("error save or update google token:", err.Error())
+			}
 		}
 
 		// Generate JWT token
@@ -126,8 +141,41 @@ func CallbackHandler(db *gorm.DB) gin.HandlerFunc {
 		//	"user":         user,
 		//})
 
-		redirectURL := fmt.Sprintf("http://localhost:3000/oauth-success?token=%s", jwtToken)
+		redirectURL := fmt.Sprintf("%s?token=%s", cfg.FrontendRedirectURL, jwtToken)
 		c.Redirect(http.StatusTemporaryRedirect, redirectURL)
 
 	}
+}
+
+func SaveOrUpdateGoogleToken(userID int, accessToken, refreshToken, userCookie string, expiry time.Time,
+	database *gorm.DB) error {
+	var token bean.GoogleToken
+
+	// Kiểm tra xem đã tồn tại token cho user này chưa
+	result := database.Where("userid = ?", userID).First(&token)
+
+	if result.Error != nil && result.RowsAffected == 0 {
+		// Chưa tồn tại → Insert mới
+		newToken := bean.GoogleToken{
+			UserID:             userID,
+			GoogleAccessToken:  accessToken,
+			GoogleRefreshToken: refreshToken,
+			TokenExpiry:        expiry,
+			UserCookie:         userCookie,
+		}
+		if err := database.Create(&newToken).Error; err != nil {
+			return err
+		}
+	} else {
+		// Đã tồn tại → Update
+		token.GoogleAccessToken = accessToken
+		token.GoogleRefreshToken = refreshToken
+		token.TokenExpiry = expiry
+		token.UserCookie = userCookie
+		if err := database.Save(&token).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
