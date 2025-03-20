@@ -50,6 +50,9 @@ func Controller(db *gorm.DB, cfg *config.Config) {
 	router.GET("/auth/callback", service.CallbackHandler(db, cfg))
 	router.GET("/auth/logout", service.LogoutHandler)
 
+	//Login with facebook
+	router.POST("/auth/facebook", service.HandleFacebookLogin(db, cfg))
+
 	// Route yêu cầu quyền admin
 	admin := router.Group("/admin")
 	admin.Use(middleware.AuthMiddleware("admin"))
