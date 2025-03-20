@@ -2,10 +2,10 @@
 -- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost:3306
--- Generation Time: Mar 20, 2025 at 10:02 AM
--- Server version: 8.0.30
--- PHP Version: 8.1.10
+-- Máy chủ: localhost:3306
+-- Thời gian đã tạo: Th3 20, 2025 lúc 05:02 PM
+-- Phiên bản máy phục vụ: 8.0.30
+-- Phiên bản PHP: 8.1.10
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,37 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `info_find`
+-- Cơ sở dữ liệu: `info_find`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `google_tokens`
+-- Cấu trúc bảng cho bảng `facebook_tokens`
+--
+
+CREATE TABLE `facebook_tokens` (
+  `id` int NOT NULL,
+  `userid` bigint UNSIGNED NOT NULL,
+  `facebook_access_token` text NOT NULL,
+  `facebook_refresh_token` text,
+  `token_expiry` datetime DEFAULT NULL,
+  `user_cookie` varchar(2000) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `facebook_tokens`
+--
+
+INSERT INTO `facebook_tokens` (`id`, `userid`, `facebook_access_token`, `facebook_refresh_token`, `token_expiry`, `user_cookie`, `created_at`, `updated_at`) VALUES
+(5, 26, 'EAAPOV9xiFcMBOzHJ37qOmZCEheJPQD9CzYcP2VrXW1XZCWljUgVZAKFd5uKYlOjJ8j3R0DznBYjAx0MKMPa2u7GWk42Puz5ZBQs8kUP2Doh1E1qZAq4hS20VANMlATyZCZAZBdlfmhvLVFXs1ZAarVTa0AOZBx5bMrupPYhUka0GC79yjKBZClxMhMRK1wuSvPApC9OIxP4GH9jMLgB3TujyD8wKqodU190cI2ZCGn3uIdxvQaZCuyZBdbzDxQ', 'EAAPOV9xiFcMBO091kZAcFVRBbMx4FBQvHiz9WlEi80PV3DbpRicU8QRRZCR47TxRzEino5bSECm4TRWOJLXpyrCJU9gw3k8msm4uqHUy5q8cX3XTU83t2v1r8nXjHmqPmvLzXbMLRdMZB0wkn6e8VYc6DvxDiDS7JWFLiPCrtb6QPezuDLSTPT6jN0KqZCZAHwWWFbDhjeZACszNoouFqKBNCGpLDEZAuXmwRHUhVx4Vi8m8aR7sZBzD', '2025-03-20 23:51:53', '', '2025-03-20 15:23:08', '2025-03-20 16:51:53');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `google_tokens`
 --
 
 CREATE TABLE `google_tokens` (
@@ -39,7 +63,7 @@ CREATE TABLE `google_tokens` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `google_tokens`
+-- Đang đổ dữ liệu cho bảng `google_tokens`
 --
 
 INSERT INTO `google_tokens` (`id`, `userid`, `google_access_token`, `google_refresh_token`, `token_expiry`, `user_cookie`, `created_at`, `updated_at`) VALUES
@@ -48,7 +72,7 @@ INSERT INTO `google_tokens` (`id`, `userid`, `google_access_token`, `google_refr
 -- --------------------------------------------------------
 
 --
--- Table structure for table `response_history_info`
+-- Cấu trúc bảng cho bảng `response_history_info`
 --
 
 CREATE TABLE `response_history_info` (
@@ -62,7 +86,7 @@ CREATE TABLE `response_history_info` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `response_history_info`
+-- Đang đổ dữ liệu cho bảng `response_history_info`
 --
 
 INSERT INTO `response_history_info` (`id`, `info`, `content`, `status`, `userid`, `created_at`, `updated_at`) VALUES
@@ -90,22 +114,22 @@ INSERT INTO `response_history_info` (`id`, `info`, `content`, `status`, `userid`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Cấu trúc bảng cho bảng `users`
 --
 
 CREATE TABLE `users` (
   `id` bigint UNSIGNED NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `password` text NOT NULL,
-  `role` varchar(20) NOT NULL,
+  `username` varchar(50) COLLATE utf8mb4_vietnamese_ci NOT NULL,
+  `password` text COLLATE utf8mb4_vietnamese_ci NOT NULL,
+  `role` varchar(20) COLLATE utf8mb4_vietnamese_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `status` int DEFAULT NULL,
-  `email` varchar(50) DEFAULT NULL
-) ;
+  `email` varchar(50) COLLATE utf8mb4_vietnamese_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_vietnamese_ci;
 
 --
--- Dumping data for table `users`
+-- Đang đổ dữ liệu cho bảng `users`
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `role`, `created_at`, `updated_at`, `status`, `email`) VALUES
@@ -113,12 +137,13 @@ INSERT INTO `users` (`id`, `username`, `password`, `role`, `created_at`, `update
 (4, 'ducha', '$2a$10$UKUkk03Ui/TIor/SIYwtY.YyOzi2BxBl42cUpeve9zd/qiBX7U6Je', 'admin', '2025-03-12 08:14:57', '2025-03-13 02:15:09', 1, NULL),
 (5, 'test', '$2a$10$RMo2XthFy2xqukjS9/CNqOXFgwMa7H3U4Va6geAxT1Yb.Bioz.eeq', 'user', '2025-03-13 09:20:45', '2025-03-13 09:20:45', 1, 'ducha.vnpay@gmail.com'),
 (6, 'user', '$2a$10$jtBGldSmuKuK4lgFHjYymuTzpDkk11NrMW0HzrZwc/8YO5.iHlgiy', 'user', '2025-03-19 07:25:41', '2025-03-19 07:25:41', 1, 'ducha.vnpay@gmail.com'),
-(19, 'ducha1@vnpay.vn', '', 'user', '2025-03-19 09:46:11', '2025-03-19 09:46:11', 1, 'ducha1@vnpay.vn');
+(19, 'ducha1@vnpay.vn', '', 'user', '2025-03-19 09:46:11', '2025-03-19 09:46:11', 1, 'ducha1@vnpay.vn'),
+(26, 'khoiphucfbthienmy@gmail.com', '', 'user', '2025-03-20 15:22:53', '2025-03-20 15:22:53', 1, 'khoiphucfbthienmy@gmail.com');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_logs`
+-- Cấu trúc bảng cho bảng `user_logs`
 --
 
 CREATE TABLE `user_logs` (
@@ -132,7 +157,7 @@ CREATE TABLE `user_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `user_logs`
+-- Đang đổ dữ liệu cho bảng `user_logs`
 --
 
 INSERT INTO `user_logs` (`id`, `userid`, `ip_public`, `user_agent`, `status_download_file`, `created_at`, `action`) VALUES
@@ -146,7 +171,7 @@ INSERT INTO `user_logs` (`id`, `userid`, `ip_public`, `user_agent`, `status_down
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_providers`
+-- Cấu trúc bảng cho bảng `user_providers`
 --
 
 CREATE TABLE `user_providers` (
@@ -162,31 +187,39 @@ CREATE TABLE `user_providers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Bảng lưu thông tin đăng nhập từ các OAuth providers như Google, Facebook';
 
 --
--- Dumping data for table `user_providers`
+-- Đang đổ dữ liệu cho bảng `user_providers`
 --
 
 INSERT INTO `user_providers` (`id`, `userid`, `provider`, `provider_id`, `email`, `name`, `avatar`, `created_at`, `updated_at`) VALUES
-(3, 19, 'google', '101275461407881757719', NULL, '', 'https://lh3.googleusercontent.com/a/ACg8ocKTc-vM7UnUlTESk36W0QRUWG8X9A8Z7QGgOZei83G5IJ6L89I=s96-c', '2025-03-19 09:46:17', '2025-03-19 09:46:17');
+(3, 19, 'google', '101275461407881757719', NULL, '', 'https://lh3.googleusercontent.com/a/ACg8ocKTc-vM7UnUlTESk36W0QRUWG8X9A8Z7QGgOZei83G5IJ6L89I=s96-c', '2025-03-19 09:46:17', '2025-03-19 09:46:17'),
+(8, 26, 'facebook', '2114340712363370', NULL, '', '', '2025-03-20 15:23:01', '2025-03-20 15:23:01');
 
 --
--- Indexes for dumped tables
+-- Chỉ mục cho các bảng đã đổ
 --
 
 --
--- Indexes for table `google_tokens`
+-- Chỉ mục cho bảng `facebook_tokens`
+--
+ALTER TABLE `facebook_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `userid` (`userid`);
+
+--
+-- Chỉ mục cho bảng `google_tokens`
 --
 ALTER TABLE `google_tokens`
   ADD PRIMARY KEY (`id`),
   ADD KEY `userid` (`userid`);
 
 --
--- Indexes for table `response_history_info`
+-- Chỉ mục cho bảng `response_history_info`
 --
 ALTER TABLE `response_history_info`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `users`
+-- Chỉ mục cho bảng `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
@@ -194,13 +227,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `username` (`username`);
 
 --
--- Indexes for table `user_logs`
+-- Chỉ mục cho bảng `user_logs`
 --
 ALTER TABLE `user_logs`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `user_providers`
+-- Chỉ mục cho bảng `user_providers`
 --
 ALTER TABLE `user_providers`
   ADD PRIMARY KEY (`id`),
@@ -208,51 +241,63 @@ ALTER TABLE `user_providers`
   ADD KEY `fk_user_provider` (`userid`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT cho các bảng đã đổ
 --
 
 --
--- AUTO_INCREMENT for table `google_tokens`
+-- AUTO_INCREMENT cho bảng `facebook_tokens`
+--
+ALTER TABLE `facebook_tokens`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT cho bảng `google_tokens`
 --
 ALTER TABLE `google_tokens`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `response_history_info`
+-- AUTO_INCREMENT cho bảng `response_history_info`
 --
 ALTER TABLE `response_history_info`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
--- AUTO_INCREMENT for table `user_logs`
+-- AUTO_INCREMENT cho bảng `user_logs`
 --
 ALTER TABLE `user_logs`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT for table `user_providers`
+-- AUTO_INCREMENT cho bảng `user_providers`
 --
 ALTER TABLE `user_providers`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto increment ID', AUTO_INCREMENT=4;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto increment ID', AUTO_INCREMENT=9;
 
 --
--- Constraints for dumped tables
+-- Ràng buộc đối với các bảng kết xuất
 --
 
 --
--- Constraints for table `google_tokens`
+-- Ràng buộc cho bảng `facebook_tokens`
+--
+ALTER TABLE `facebook_tokens`
+  ADD CONSTRAINT `facebook_tokens_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Ràng buộc cho bảng `google_tokens`
 --
 ALTER TABLE `google_tokens`
   ADD CONSTRAINT `google_tokens_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `user_providers`
+-- Ràng buộc cho bảng `user_providers`
 --
 ALTER TABLE `user_providers`
   ADD CONSTRAINT `fk_user_provider` FOREIGN KEY (`userid`) REFERENCES `users` (`id`) ON DELETE CASCADE;
