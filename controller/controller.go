@@ -35,7 +35,7 @@ func Controller(db *gorm.DB, cfg *config.Config) {
 		v1.POST("/update/all", service.DeleteItemByListId(db))            // delete an item by list ID
 		v1.POST("/delete", service.DeleteItems(db))                       // delete an item by ID
 		v1.GET("/item/display/:id", service.GetDisplayItems(db))          // Get display item by ID
-
+		v1.GET("/dasboard/:userId", service.GetInfoDashboardByUserId(db)) //Get thông tin dasborad byUser
 	}
 
 	router.POST("/userlogs", service.CreateUserLogs(db))
@@ -61,8 +61,10 @@ func Controller(db *gorm.DB, cfg *config.Config) {
 			c.JSON(200, gin.H{"message": "Chào mừng admin!"})
 		})
 
-		admin.GET("/items", service.GetListOfItemsByAdmin(db)) //Get all items with all status
-		admin.POST("/items/upload", service.UploadFileContent) // Get display item by ID
+		admin.GET("/items", service.GetListOfItemsByAdmin(db))                      //Get all items with all status
+		admin.POST("/items/upload", service.UploadFileContent)                      // Get display item by ID
+		admin.GET("/items/search/:info", service.GetListOfItemsByAdminWithInfo(db)) //Search with SDT/Mail/TKCK
+		admin.GET("/dasboard", service.GetInfoDashboard(db))
 	}
 
 	port := os.Getenv("PORT")
