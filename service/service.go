@@ -396,6 +396,53 @@ func GetDisplayItems(db *gorm.DB) gin.HandlerFunc {
 
 }
 
+func GetListOfItemsByAdminWithInfo(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		info := c.Param("info")
+
+		type DataPaging struct {
+			Page  int   `json:"page" form:"page"`
+			Limit int   `json:"limit" form:"limit"`
+			Total int64 `json:"total" form:"-"`
+		}
+
+		var paging DataPaging
+
+		if err := c.ShouldBind(&paging); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if paging.Page <= 0 {
+			paging.Page = 1
+		}
+
+		if paging.Limit <= 0 {
+			paging.Limit = 10
+		}
+
+		offset := (paging.Page - 1) * paging.Limit
+
+		var result []response.ResponseHistoryInfo
+
+		if err := db.Table(response.ResponseHistoryInfo{}.TableName()).
+			Where("info LIKE ? ", "%"+info+"%").
+			Count(&paging.Total).
+			Offset(offset).
+			Limit(paging.Limit).
+			Order("id DESC").
+			Find(&result).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data":   result,
+			"paging": paging,
+		})
+	}
+}
+
 func UploadFileContent(c *gin.Context) {
 	// Lấy file từ form
 	file, err := c.FormFile("file")
@@ -416,4 +463,60 @@ func UploadFileContent(c *gin.Context) {
 		"file":    file.Filename,
 		"path":    filePath,
 	})
+}
+
+func GetInfoDashboard(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var totalRecords int64
+		var completed int64
+		var inProgress int64
+		var userDisplayedData int64
+		var userDownloaded int64
+
+		db.Model(&response.ResponseHistoryInfo{}).Count(&totalRecords)
+		db.Model(&response.ResponseHistoryInfo{}).Where("status = ?", 1).Count(&completed)
+		db.Model(&response.ResponseHistoryInfo{}).Where("status = ?", 2).Count(&inProgress)
+		db.Model(&response.ResponseHistoryInfo{}).Where("status = ?", 3).Count(&userDisplayedData)
+		db.Model(&response.ResponseHistoryInfo{}).Where("status = ?", 4).Count(&userDownloaded)
+
+		c.JSON(http.StatusOK, gin.H{
+			"totalRecords":  totalRecords,
+			"completed":     completed,
+			"inProgress":    inProgress,
+			"displayedData": userDisplayedData,
+			"downloaded":    userDownloaded,
+		})
+	}
+}
+
+func GetInfoDashboardByUserId(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId := c.Param("userId")
+
+		var totalRecords int64
+		var statusCount = make(map[int]int64)
+
+		// Tổng số bản ghi theo user_id
+		db.Model(&response.ResponseHistoryInfo{}).
+			Where("user_id = ?", userId).
+			Count(&totalRecords)
+
+		// Đếm theo từng status (1, 2, 3, 4)
+		statusList := []int{1, 2, 3, 4}
+		for _, status := range statusList {
+			var count int64
+			db.Model(&response.ResponseHistoryInfo{}).
+				Where("userid = ? AND status = ?", userId, status).
+				Count(&count)
+			statusCount[status] = count
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"totalRecords":  totalRecords,
+			"completed":     statusCount[1],
+			"inProgress":    statusCount[2],
+			"displayedData": statusCount[3],
+			"downloaded":    statusCount[4],
+		})
+	}
 }

@@ -140,8 +140,9 @@ func CallbackHandler(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
 		//	"access_token": token.AccessToken, // Google AccessToken
 		//	"user":         user,
 		//})
-
+		log.Println("FrontendRedirectURL: ", cfg.FrontendRedirectURL)
 		redirectURL := fmt.Sprintf("%s?token=%s", cfg.FrontendRedirectURL, jwtToken)
+		log.Println("redirectURL: ", redirectURL)
 		c.Redirect(http.StatusTemporaryRedirect, redirectURL)
 
 	}
