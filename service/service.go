@@ -498,7 +498,7 @@ func GetInfoDashboardByUserId(db *gorm.DB) gin.HandlerFunc {
 
 		// Tổng số bản ghi theo user_id
 		db.Model(&response.ResponseHistoryInfo{}).
-			Where("user_id = ?", userId).
+			Where("userid = ?", userId).
 			Count(&totalRecords)
 
 		// Đếm theo từng status (1, 2, 3, 4)

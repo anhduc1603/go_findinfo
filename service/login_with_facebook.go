@@ -4,9 +4,9 @@ import (
 	"LeakInfo/bean"
 	"LeakInfo/bean/request"
 	"LeakInfo/config"
+	"LeakInfo/utils"
 	"encoding/json"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"io/ioutil"
@@ -84,22 +84,18 @@ func HandleFacebookLogin(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
 		fmt.Printf("Facebook user: %+v\n", user)
 
 		// Generate JWT Token
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user_id": user.ID,
-			"email":   user.Email,
-			"exp":     time.Now().Add(time.Hour * 72).Unix(),
-		})
 
-		tokenString, err := token.SignedString(jwtSecret)
+		jwtToken, err := utils.GenerateJWTToken(user.ID, user.Email, user.Role)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate JWT"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 			return
 		}
 
 		//c.JSON(http.StatusOK, gin.H{"token": tokenString})
-		redirectURL := fmt.Sprintf("%s?token=%s", cfg.FrontendRedirectURL, tokenString)
+		redirectURL := fmt.Sprintf("%s?token=%s", cfg.FrontendRedirectURL, jwtToken)
 		log.Println("redirectURL:", redirectURL)
-		c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+		//c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+		c.JSON(http.StatusOK, gin.H{"redirectURL": redirectURL})
 	}
 }
 
